@@ -4,11 +4,11 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { FileText, AlertCircle, CheckCircle2, FileUp, Database } from "lucide-react"
+import { FileText, AlertCircle, CheckCircle2, FileUp, Database, Microscope } from "lucide-react"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
 
@@ -26,12 +26,17 @@ export default function UploadPage() {
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
+  const [qualityCheckStatus, setQualityCheckStatus] = useState<"idle" | "checking" | "passed" | "failed">("idle")
+  const [qualityError, setQualityError] = useState<string>("")
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       switch (fileType) {
         case "fastq":
           setFastqFile(file)
+          setQualityCheckStatus("idle") // Reset quality check
+          setQualityError("")
           break
         case "fasta":
           setFastaFile(file)
@@ -51,6 +56,8 @@ export default function UploadPage() {
     switch (fileType) {
       case "fastq":
         setFastqFile(null)
+        setQualityCheckStatus("idle")
+        setQualityError("")
         break
       case "fasta":
         setFastaFile(null)
@@ -94,11 +101,44 @@ export default function UploadPage() {
     }, 1000)
   }
 
+  const checkFileQuality = (file: File) => {
+    if (!file) return
+
+    setQualityCheckStatus("checking")
+    setQualityError("")
+
+    // Simulasi pengecekan kualitas file
+    setTimeout(() => {
+      // Simulasi berbagai kondisi error berdasarkan nama file atau ukuran
+      const fileName = file.name.toLowerCase()
+      const fileSize = file.size
+
+      // Simulasi kondisi error
+      if (fileSize < 1000) {
+        setQualityCheckStatus("failed")
+        setQualityError("File terlalu kecil. Ukuran minimum 1KB untuk analisis yang valid.")
+      } else if (fileSize > 500 * 1024 * 1024) {
+        setQualityCheckStatus("failed")
+        setQualityError("File terlalu besar. Ukuran maksimum 500MB.")
+      } else if (fileName.includes("low") || fileName.includes("bad")) {
+        setQualityCheckStatus("failed")
+        setQualityError("Kualitas sekuens rendah. Phred score rata-rata < 20. Gunakan file dengan kualitas lebih baik.")
+      } else if (!fileName.includes(".fastq") && !fileName.includes(".fq")) {
+        setQualityCheckStatus("failed")
+        setQualityError("Format file tidak valid. Pastikan file berformat FASTQ (.fastq atau .fq).")
+      } else {
+        // File passed quality check
+        setQualityCheckStatus("passed")
+      }
+    }, 2000)
+  }
+
   const canStartAnalysis = () => {
     const hasRequiredFiles = fastqFile && fastaFile
     const hasDbSNP = useDefaultDbSNP || dbsnpFile
     const hasBED = useDefaultBED || bedFile
-    return hasRequiredFiles && hasDbSNP && hasBED && uploadStatus !== "uploading" && !isAnalyzing
+    const qualityOk = qualityCheckStatus === "passed" || qualityCheckStatus === "idle"
+    return hasRequiredFiles && hasDbSNP && hasBED && uploadStatus !== "uploading" && !isAnalyzing && qualityOk
   }
 
   const FileUploadArea = ({
@@ -172,16 +212,7 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Unggah Data DNA</h1>
-              <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                Unggah file FASTQ dan FASTA Anda untuk memulai proses analisis dan deteksi mutasi genetik.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-8 py-12">
+          <div className="space-y-8">
             {/* File Upload Section */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
@@ -201,6 +232,49 @@ export default function UploadPage() {
                     acceptedFormats=".fastq,.fq"
                   />
                 </CardContent>
+                <CardFooter className="flex justify-between items-start">
+                  <div className="flex-1">
+                    {qualityError && (
+                      <Alert variant="destructive" className="mb-0">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Kualitas File Tidak Memenuhi Syarat</AlertTitle>
+                        <AlertDescription className="text-sm">{qualityError}</AlertDescription>
+                      </Alert>
+                    )}
+                    {qualityCheckStatus === "passed" && (
+                      <Alert className="border-green-500 text-green-500 mb-0">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <AlertTitle>Kualitas File Baik</AlertTitle>
+                        <AlertDescription className="text-sm">
+                          File FASTQ memenuhi standar kualitas untuk analisis (Phred score ≥ 20).
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (fastqFile) checkFileQuality(fastqFile);
+                      }}
+                      disabled={!fastqFile || qualityCheckStatus === "checking"}
+                      className="gap-2"
+                    >
+                      {qualityCheckStatus === "checking" ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          Memeriksa...
+                        </>
+                      ) : (
+                        <>
+                          <Microscope className="h-4 w-4" />
+                          Cek Kualitas
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardFooter>
               </Card>
 
               <Card>
