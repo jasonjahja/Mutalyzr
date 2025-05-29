@@ -212,7 +212,16 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className="space-y-8">
+          <div className="flex flex-col items-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-4">Unggah Data DNA</h1>
+              <p className="max-w-[700px] text-muted-foreground md:text-xl">
+                Unggah file FASTQ dan FASTA Anda untuk memulai proses analisis dan deteksi mutasi genetik.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-8 py-12">
             {/* File Upload Section */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
