@@ -1,21 +1,26 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { FileText, AlertCircle, CheckCircle2, FileUp, Database, Microscope } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { FileText, AlertCircle, CheckCircle2, Database, Microscope } from "lucide-react"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
 
 export default function UploadPage() {
   const router = useRouter()
-  const [fastqFile, setFastqFile] = useState<File | null>(null)
-  const [fastaFile, setFastaFile] = useState<File | null>(null)
+  const [fastqInput, setFastqInput] = useState("")
+  const [fastaInput, setFastaInput] = useState("")
+  const [fastqError, setFastqError] = useState("")
+  const [fastaError, setFastaError] = useState("")
+
   const [dbsnpFile, setDbsnpFile] = useState<File | null>(null)
   const [bedFile, setBedFile] = useState<File | null>(null)
 
@@ -33,14 +38,6 @@ export default function UploadPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       switch (fileType) {
-        case "fastq":
-          setFastqFile(file)
-          setQualityCheckStatus("idle") // Reset quality check
-          setQualityError("")
-          break
-        case "fasta":
-          setFastaFile(file)
-          break
         case "dbsnp":
           setDbsnpFile(file)
           break
@@ -54,14 +51,6 @@ export default function UploadPage() {
 
   const removeFile = (fileType: string) => {
     switch (fileType) {
-      case "fastq":
-        setFastqFile(null)
-        setQualityCheckStatus("idle")
-        setQualityError("")
-        break
-      case "fasta":
-        setFastaFile(null)
-        break
       case "dbsnp":
         setDbsnpFile(null)
         break
@@ -71,7 +60,134 @@ export default function UploadPage() {
     }
   }
 
+  const validateFastq = (input: string): boolean => {
+    if (!input.trim()) {
+      setFastqError("Input FASTQ tidak boleh kosong")
+      return false
+    }
+
+    const lines = input.trim().split("\n")
+
+    // Check for even number of lines (sequence + quality pairs)
+    if (lines.length % 2 !== 0) {
+      setFastqError("FASTQ harus memiliki jumlah baris genap (pasangan sekuens dan kualitas)")
+      return false
+    }
+
+    // Validate each pair of lines
+    for (let i = 0; i < lines.length; i += 2) {
+      const sequence = lines[i].trim().toUpperCase()
+      const quality = lines[i + 1]?.trim()
+
+      // Validate sequence line (DNA characters only)
+      if (!/^[ATCGN]+$/.test(sequence)) {
+        setFastqError(`Baris ${i + 1}: Sekuens hanya boleh mengandung karakter A, T, C, G, atau N`)
+        return false
+      }
+
+      // Validate quality line exists
+      if (!quality) {
+        setFastqError(`Baris ${i + 2}: Baris kualitas tidak ditemukan`)
+        return false
+      }
+
+      // Validate quality line length matches sequence
+      if (quality.length !== sequence.length) {
+        setFastqError(`Baris ${i + 2}: Panjang baris kualitas harus sama dengan panjang sekuens`)
+        return false
+      }
+
+      // Validate quality characters (ASCII 33-126)
+      for (let j = 0; j < quality.length; j++) {
+        const charCode = quality.charCodeAt(j)
+        if (charCode < 33 || charCode > 126) {
+          setFastqError(`Baris ${i + 2}: Karakter kualitas tidak valid pada posisi ${j + 1}`)
+          return false
+        }
+      }
+    }
+
+    setFastqError("")
+    return true
+  }
+
+  const validateFasta = (input: string): boolean => {
+    if (!input.trim()) {
+      setFastaError("Input FASTA tidak boleh kosong")
+      return false
+    }
+
+    const lines = input.trim().split("\n")
+
+    for (let i = 0; i < lines.length; i++) {
+      const sequence = lines[i].trim().toUpperCase()
+
+      if (!sequence) continue // Skip empty lines
+
+      // Validate sequence contains only DNA characters
+      if (!/^[ATCGN]+$/.test(sequence)) {
+        setFastaError(`Baris ${i + 1}: Sekuens hanya boleh mengandung karakter A, T, C, G, atau N`)
+        return false
+      }
+    }
+
+    setFastaError("")
+    return true
+  }
+
+  const checkFastqQuality = () => {
+    if (!fastqInput.trim()) {
+      setQualityCheckStatus("failed")
+      setQualityError("Input FASTQ tidak boleh kosong")
+      return
+    }
+
+    setQualityCheckStatus("checking")
+    setQualityError("")
+
+    // Simulasi pengecekan kualitas
+    setTimeout(() => {
+      const lines = fastqInput.trim().split("\n")
+      let totalQualityScore = 0
+      let totalBases = 0
+
+      // Calculate average quality score
+      for (let i = 0; i < lines.length; i += 2) {
+        if (i + 1 >= lines.length) break
+
+        const sequence = lines[i]
+        const quality = lines[i + 1]
+
+        if (!sequence || !quality) continue
+
+        for (let j = 0; j < quality.length; j++) {
+          // Convert ASCII to Phred score (ASCII - 33)
+          const phredScore = quality.charCodeAt(j) - 33
+          totalQualityScore += phredScore
+          totalBases++
+        }
+      }
+
+      const averageQuality = totalBases > 0 ? totalQualityScore / totalBases : 0
+
+      if (averageQuality < 20) {
+        setQualityCheckStatus("failed")
+        setQualityError(`Kualitas sekuens rendah. Phred score rata-rata: ${averageQuality.toFixed(2)} (minimum 20)`)
+      } else {
+        setQualityCheckStatus("passed")
+      }
+    }, 1500)
+  }
+
   const simulateUpload = () => {
+    // Validate inputs first
+    const fastqValid = validateFastq(fastqInput)
+    const fastaValid = validateFasta(fastaInput)
+
+    if (!fastqValid || !fastaValid) {
+      return
+    }
+
     setUploadStatus("uploading")
     setUploadProgress(0)
 
@@ -88,57 +204,59 @@ export default function UploadPage() {
     }, 150)
   }
 
-  const startAnalysis = () => {
+  const startAnalysis = async () => {
     setIsAnalyzing(true)
 
-    // Simpan informasi file dan status analisis ke sessionStorage
-    sessionStorage.setItem("analysisStarted", "true")
-    sessionStorage.setItem("analysisProgress", "0")
+    try {
+      // Send data to backend
+      const formData = new FormData()
+      formData.append("fastqData", fastqInput)
+      formData.append("fastaData", fastaInput)
 
-    // Redirect ke halaman hasil setelah sedikit delay
-    setTimeout(() => {
-      router.push("/results")
-    }, 1000)
-  }
-
-  const checkFileQuality = (file: File) => {
-    if (!file) return
-
-    setQualityCheckStatus("checking")
-    setQualityError("")
-
-    // Simulasi pengecekan kualitas file
-    setTimeout(() => {
-      // Simulasi berbagai kondisi error berdasarkan nama file atau ukuran
-      const fileName = file.name.toLowerCase()
-      const fileSize = file.size
-
-      // Simulasi kondisi error
-      if (fileSize < 1000) {
-        setQualityCheckStatus("failed")
-        setQualityError("File terlalu kecil. Ukuran minimum 1KB untuk analisis yang valid.")
-      } else if (fileSize > 500 * 1024 * 1024) {
-        setQualityCheckStatus("failed")
-        setQualityError("File terlalu besar. Ukuran maksimum 500MB.")
-      } else if (fileName.includes("low") || fileName.includes("bad")) {
-        setQualityCheckStatus("failed")
-        setQualityError("Kualitas sekuens rendah. Phred score rata-rata < 20. Gunakan file dengan kualitas lebih baik.")
-      } else if (!fileName.includes(".fastq") && !fileName.includes(".fq")) {
-        setQualityCheckStatus("failed")
-        setQualityError("Format file tidak valid. Pastikan file berformat FASTQ (.fastq atau .fq).")
-      } else {
-        // File passed quality check
-        setQualityCheckStatus("passed")
+      if (!useDefaultDbSNP && dbsnpFile) {
+        formData.append("dbsnpFile", dbsnpFile)
       }
-    }, 2000)
+
+      if (!useDefaultBED && bedFile) {
+        formData.append("bedFile", bedFile)
+      }
+
+      formData.append("useDefaultDbSNP", useDefaultDbSNP.toString())
+      formData.append("useDefaultBED", useDefaultBED.toString())
+
+      // In a real implementation, you would send this data to your backend
+      // const response = await fetch("/api/upload", {
+      //   method: "POST",
+      //   body: formData,
+      // })
+
+      // if (!response.ok) {
+      //   throw new Error("Upload failed")
+      // }
+
+      // Simpan informasi file dan status analisis ke sessionStorage
+      sessionStorage.setItem("analysisStarted", "true")
+      sessionStorage.setItem("analysisProgress", "0")
+
+      // Redirect ke halaman hasil setelah sedikit delay
+      setTimeout(() => {
+        router.push("/results")
+      }, 1000)
+    } catch (error) {
+      console.error("Upload error:", error)
+      setUploadStatus("error")
+      setIsAnalyzing(false)
+    }
   }
 
   const canStartAnalysis = () => {
-    const hasRequiredFiles = fastqFile && fastaFile
+    const hasFastq = fastqInput.trim() !== "" && !fastqError
+    const hasFasta = fastaInput.trim() !== "" && !fastaError
     const hasDbSNP = useDefaultDbSNP || dbsnpFile
     const hasBED = useDefaultBED || bedFile
-    const qualityOk = qualityCheckStatus === "passed" || qualityCheckStatus === "idle"
-    return hasRequiredFiles && hasDbSNP && hasBED && uploadStatus !== "uploading" && !isAnalyzing && qualityOk
+    const qualityOk = qualityCheckStatus !== "failed"
+
+    return hasFastq && hasFasta && hasDbSNP && hasBED && uploadStatus !== "uploading" && !isAnalyzing && qualityOk
   }
 
   const FileUploadArea = ({
@@ -168,7 +286,7 @@ export default function UploadPage() {
         </div>
       ) : (
         <label className="flex flex-col items-center gap-3 cursor-pointer text-center w-full h-full justify-center">
-          <FileUp className="h-12 w-12 text-muted-foreground" />
+          <FileText className="h-12 w-12 text-muted-foreground" />
           <div>
             <span className="font-medium text-sm">Klik untuk memilih {title}</span>
             <p className="text-xs text-muted-foreground mt-1">{description}</p>
@@ -221,41 +339,60 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className="space-y-8 py-12">
-            {/* File Upload Section */}
+          <div className="space-y-8 mt-12">
+            {/* Input Section */}
             <div className="grid gap-6 md:grid-cols-2">
+              {/* FASTQ Input */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Unggah File FASTQ
+                    Input Data FASTQ
                   </CardTitle>
-                  <CardDescription>File FASTQ berisi data sekuens DNA mentah dari hasil sekuensing</CardDescription>
+                  <CardDescription>
+                    Masukkan data sekuens DNA dengan format FASTQ (baris bergantian: sekuens DNA dan kualitas)
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <FileUploadArea
-                    file={fastqFile}
-                    fileType="fastq"
-                    title="file FASTQ"
-                    description="atau seret dan lepas file di sini"
-                    acceptedFormats=".fastq,.fq"
+                  <Textarea
+                    placeholder={`Contoh format FASTQ:
+ATCGATCGATCG
+!@#$%^&*()_+
+`}
+                    value={fastqInput}
+                    onChange={(e) => {
+                      setFastqInput(e.target.value)
+                      setQualityCheckStatus("idle")
+                      setQualityError("")
+                    }}
+                    className="min-h-[200px] font-mono text-sm"
                   />
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Format: Baris ganjil = sekuens DNA (A,T,C,G,N), Baris genap = kualitas ASCII
+                  </div>
+                  {fastqError && (
+                    <Alert variant="destructive" className="mt-3">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error Validasi FASTQ</AlertTitle>
+                      <AlertDescription className="text-sm">{fastqError}</AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
                 <CardFooter className="flex justify-between items-start">
                   <div className="flex-1">
                     {qualityError && (
                       <Alert variant="destructive" className="mb-0">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Kualitas File Tidak Memenuhi Syarat</AlertTitle>
+                        <AlertTitle>Kualitas Sekuens Tidak Memenuhi Syarat</AlertTitle>
                         <AlertDescription className="text-sm">{qualityError}</AlertDescription>
                       </Alert>
                     )}
                     {qualityCheckStatus === "passed" && (
                       <Alert className="border-green-500 text-green-500 mb-0">
                         <CheckCircle2 className="h-4 w-4" />
-                        <AlertTitle>Kualitas File Baik</AlertTitle>
+                        <AlertTitle>Kualitas Sekuens Baik</AlertTitle>
                         <AlertDescription className="text-sm">
-                          File FASTQ memenuhi standar kualitas untuk analisis (Phred score ≥ 20).
+                          Data FASTQ memenuhi standar kualitas untuk analisis (Phred score ≥ 20).
                         </AlertDescription>
                       </Alert>
                     )}
@@ -264,10 +401,8 @@ export default function UploadPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (fastqFile) checkFileQuality(fastqFile);
-                      }}
-                      disabled={!fastqFile || qualityCheckStatus === "checking"}
+                      onClick={checkFastqQuality}
+                      disabled={!fastqInput.trim() || qualityCheckStatus === "checking" || !!fastqError}
                       className="gap-2"
                     >
                       {qualityCheckStatus === "checking" ? (
@@ -286,24 +421,36 @@ export default function UploadPage() {
                 </CardFooter>
               </Card>
 
+              {/* FASTA Input */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Unggah File FASTA
+                    Input Data FASTA
                   </CardTitle>
                   <CardDescription>
-                    File FASTA berisi data sekuens referensi untuk analisis perbandingan
+                    Masukkan sekuens referensi DNA dengan format FASTA (hanya sekuens DNA)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <FileUploadArea
-                    file={fastaFile}
-                    fileType="fasta"
-                    title="file FASTA"
-                    description="atau seret dan lepas file di sini"
-                    acceptedFormats=".fasta,.fa,.fna"
+                  <Textarea
+                    placeholder={`Contoh format FASTA:
+ATCGATCGATCGATCG
+`}
+                    value={fastaInput}
+                    onChange={(e) => setFastaInput(e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
                   />
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Format: Satu baris per sekuens, hanya karakter A, T, C, G, N
+                  </div>
+                  {fastaError && (
+                    <Alert variant="destructive" className="mt-3">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error Validasi FASTA</AlertTitle>
+                      <AlertDescription className="text-sm">{fastaError}</AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -418,7 +565,7 @@ export default function UploadPage() {
                 <CardContent className="pt-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Mengunggah file...</span>
+                      <span>Mengunggah data...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
@@ -432,7 +579,7 @@ export default function UploadPage() {
               <Alert className="border-green-500 text-green-500">
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertTitle>Berhasil</AlertTitle>
-                <AlertDescription>Semua file berhasil diunggah. Memulai analisis...</AlertDescription>
+                <AlertDescription>Semua data berhasil diunggah. Memulai analisis...</AlertDescription>
               </Alert>
             )}
 
@@ -440,7 +587,7 @@ export default function UploadPage() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>Terjadi kesalahan saat mengunggah file. Silakan coba lagi.</AlertDescription>
+                <AlertDescription>Terjadi kesalahan saat mengunggah data. Silakan coba lagi.</AlertDescription>
               </Alert>
             )}
 
@@ -451,24 +598,24 @@ export default function UploadPage() {
               </Button>
             </div>
 
-            {/* File Summary */}
-            {(fastqFile || fastaFile || (!useDefaultDbSNP && dbsnpFile) || (!useDefaultBED && bedFile)) && (
+            {/* Data Summary */}
+            {(fastqInput || fastaInput || (!useDefaultDbSNP && dbsnpFile) || (!useDefaultBED && bedFile)) && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Ringkasan File</CardTitle>
+                  <CardTitle className="text-base">Ringkasan Data</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2 text-sm">
-                    {fastqFile && (
+                    {fastqInput && (
                       <div className="flex justify-between">
                         <span>FASTQ:</span>
-                        <span className="font-medium">{fastqFile.name}</span>
+                        <span className="font-medium">{`${fastqInput.split("\n").length / 2} pasang sekuens`}</span>
                       </div>
                     )}
-                    {fastaFile && (
+                    {fastaInput && (
                       <div className="flex justify-between">
                         <span>FASTA:</span>
-                        <span className="font-medium">{fastaFile.name}</span>
+                        <span className="font-medium">{`${fastaInput.split("\n").filter((line) => line.trim()).length} sekuens`}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
@@ -495,3 +642,4 @@ export default function UploadPage() {
     </div>
   )
 }
+
