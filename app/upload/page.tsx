@@ -254,7 +254,7 @@ export default function UploadPage() {
     const hasFasta = fastaInput.trim() !== "" && !fastaError
     const hasDbSNP = useDefaultDbSNP || dbsnpFile
     const hasBED = useDefaultBED || bedFile
-    const qualityOk = qualityCheckStatus !== "failed"
+    const qualityOk = qualityCheckStatus === "passed"
 
     return hasFastq && hasFasta && hasDbSNP && hasBED && uploadStatus !== "uploading" && !isAnalyzing && qualityOk
   }
@@ -302,6 +302,31 @@ export default function UploadPage() {
       )}
     </div>
   )
+
+  const RequirementsList = () => {
+    const hasDbSNP = useDefaultDbSNP || dbsnpFile
+    const hasBED = useDefaultBED || bedFile
+    const showQualityCheckReminder = fastqInput && !fastqError && qualityCheckStatus !== "passed"
+
+    return (
+      <div className="text-sm text-muted-foreground max-w-xl text-center">
+        {/* Only show header if there are requirements other than quality check */}
+        {(!fastqInput || fastqError || !fastaInput || fastaError || !hasDbSNP || !hasBED) && (
+          <>
+            Untuk memulai analisis, pastikan:
+            <ul className="mt-2 space-y-1 list-disc list-inside">
+              {!fastqInput && <li>Data FASTQ telah dimasukkan</li>}
+              {fastqError && <li>Data FASTQ valid</li>}
+              {!fastaInput && <li>Data FASTA telah dimasukkan</li>}
+              {fastaError && <li>Data FASTA valid</li>}
+              {!hasDbSNP && <li>Database dbSNP telah dipilih</li>}
+              {!hasBED && <li>File BED telah dipilih</li>}
+            </ul>
+          </>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -364,6 +389,12 @@ ATCGATCGATCG
                       setFastqInput(e.target.value)
                       setQualityCheckStatus("idle")
                       setQualityError("")
+                      // Validate FASTQ on each change
+                      if (e.target.value.trim() === "") {
+                        setFastqError("")
+                      } else {
+                        validateFastq(e.target.value)
+                      }
                     }}
                     className="min-h-[200px] font-mono text-sm"
                   />
@@ -438,7 +469,15 @@ ATCGATCGATCG
 ATCGATCGATCGATCG
 `}
                     value={fastaInput}
-                    onChange={(e) => setFastaInput(e.target.value)}
+                    onChange={(e) => {
+                      setFastaInput(e.target.value)
+                      // Validate FASTA on each change
+                      if (e.target.value.trim() === "") {
+                        setFastaError("")
+                      } else {
+                        validateFasta(e.target.value)
+                      }
+                    }}
                     className="min-h-[200px] font-mono text-sm"
                   />
                   <div className="mt-2 text-xs text-muted-foreground">
@@ -592,10 +631,25 @@ ATCGATCGATCGATCG
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-center pt-8">
+            <div className="flex flex-col items-center gap-4 pt-8">
               <Button size="lg" className="px-12 py-3 text-lg" disabled={!canStartAnalysis()} onClick={simulateUpload}>
                 {uploadStatus === "uploading" ? "Mengunggah..." : isAnalyzing ? "Memproses..." : "Mulai Analisis"}
               </Button>
+              
+              {/* Information about requirements */}
+              {fastqInput && !fastqError && qualityCheckStatus !== "passed" && (
+                <Alert className="max-w-xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Pemeriksaan Kualitas Diperlukan</AlertTitle>
+                  <AlertDescription className="text-sm">
+                    Sebelum memulai analisis, Anda perlu memeriksa kualitas data FASTQ menggunakan tombol "Cek Kualitas" di atas.
+                    Hal ini untuk memastikan data memenuhi standar kualitas minimum (Phred score ≥ 20).
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Show what's missing for analysis */}
+              {!canStartAnalysis() && <RequirementsList />}
             </div>
 
             {/* Data Summary */}

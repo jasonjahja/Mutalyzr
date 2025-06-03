@@ -23,105 +23,42 @@ export default function ResultsPage() {
   const mutationData = [
     {
       id: 1,
-      position: "chr1:12345",
-      reference: "A",
-      mutation: "G",
-      gene: "BRCA1",
-      impact: "High",
-      disease: "Breast Cancer",
-      frequency: "0.01%",
+      position: "chr19:45411941",
+      reference: "C",
+      mutation: "T",
+      gene: "APOE",
+      impact: "Medium",
+      disease: "Alzheimer",
+      frequency: "14%",
+      riskScore: 0.78,
+      pubReference: "PMID:20385794"
     },
     {
       id: 2,
-      position: "chr2:23456",
-      reference: "C",
-      mutation: "T",
-      gene: "TP53",
+      position: "chr12:40252984",
+      reference: "G",
+      mutation: "A",
+      gene: "LRRK2",
       impact: "High",
-      disease: "Li-Fraumeni Syndrome",
-      frequency: "0.02%",
+      disease: "Parkinson",
+      frequency: "0.1%",
+      riskScore: 0.61,
+      pubReference: "PMID:17017515"
     },
     {
       id: 3,
-      position: "chr3:34567",
-      reference: "G",
-      mutation: "A",
-      gene: "CFTR",
-      impact: "Medium",
-      disease: "Cystic Fibrosis",
-      frequency: "0.05%",
-    },
-    {
-      id: 4,
-      position: "chr4:45678",
-      reference: "T",
-      mutation: "C",
-      gene: "PTEN",
-      impact: "Low",
-      disease: "Cowden Syndrome",
-      frequency: "0.03%",
-    },
-    {
-      id: 5,
-      position: "chr5:56789",
+      position: "chr13:99838451",
       reference: "A",
-      mutation: "T",
-      gene: "APC",
-      impact: "High",
-      disease: "Familial Adenomatous Polyposis",
-      frequency: "0.01%",
-    },
-    {
-      id: 6,
-      position: "chr6:67890",
-      reference: "C",
       mutation: "G",
-      gene: "MLH1",
-      impact: "Medium",
-      disease: "Lynch Syndrome",
-      frequency: "0.02%",
-    },
-    {
-      id: 7,
-      position: "chr7:78901",
-      reference: "G",
-      mutation: "T",
-      gene: "KRAS",
-      impact: "High",
-      disease: "Pancreatic Cancer",
-      frequency: "0.04%",
-    },
-    {
-      id: 8,
-      position: "chr8:89012",
-      reference: "T",
-      mutation: "A",
-      gene: "RB1",
-      impact: "High",
-      disease: "Retinoblastoma",
-      frequency: "0.01%",
-    },
-    {
-      id: 9,
-      position: "chr9:90123",
-      reference: "A",
-      mutation: "C",
-      gene: "NOTCH1",
+      gene: "SLITRK1",
       impact: "Low",
-      disease: "Aortic Valve Disease",
-      frequency: "0.03%",
-    },
-    {
-      id: 10,
-      position: "chr10:01234",
-      reference: "C",
-      mutation: "A",
-      gene: "BRAF",
-      impact: "Medium",
-      disease: "Melanoma",
-      frequency: "0.02%",
-    },
-  ]
+      disease: "Tourette Syndrome",
+      frequency: "2%",
+      riskScore: 0.39,
+      pubReference: "PMID:16288218"
+    }
+  ];  
+
 
   useEffect(() => {
     // Cek apakah analisis sudah dimulai dari halaman upload
@@ -243,6 +180,8 @@ export default function ResultsPage() {
           ],
           alertType: "destructive" as const,
           icon: AlertTriangle,
+          titleColor: "text-red-900 dark:text-red-500",
+          bgColor: "bg-red-100 dark:bg-red-950/30"
         }
       case "high":
         return {
@@ -256,6 +195,8 @@ export default function ResultsPage() {
           ],
           alertType: "destructive" as const,
           icon: AlertTriangle,
+          titleColor: "text-red-600 dark:text-red-400",
+          bgColor: "bg-red-50 dark:bg-red-900/20"
         }
       case "medium":
         return {
@@ -269,6 +210,8 @@ export default function ResultsPage() {
           ],
           alertType: "default" as const,
           icon: Info,
+          titleColor: "text-yellow-700 dark:text-yellow-400",
+          bgColor: "bg-yellow-50 dark:bg-yellow-900/10"
         }
       case "low":
         return {
@@ -282,11 +225,13 @@ export default function ResultsPage() {
           ],
           alertType: "default" as const,
           icon: CheckCircle,
+          titleColor: "text-green-700 dark:text-green-400",
+          bgColor: "bg-green-50 dark:bg-green-900/10"
         }
     }
   }
 
-  const { conclusion, recommendations, alertType, icon: IconComponent } = getConclusionAndRecommendations()
+  const { conclusion, recommendations, alertType, icon: IconComponent, titleColor, bgColor } = getConclusionAndRecommendations()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -298,10 +243,10 @@ export default function ResultsPage() {
           <div className="flex items-center justify-center mb-12">
             <div className="flex items-center space-x-4">
               <div className="flex flex-col items-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/30 text-primary font-semibold">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                   1
                 </div>
-                <span className="font-medium mt-2 text-muted-foreground">Unggah</span>
+                <span className="font-medium mt-2">Unggah</span>
               </div>
               <div className="relative bottom-4 h-2 w-24 bg-primary rounded-full overflow-hidden" />
               <div className="flex flex-col items-center">
@@ -374,20 +319,38 @@ export default function ResultsPage() {
                               <TableHead>Mutasi</TableHead>
                               <TableHead>Gen</TableHead>
                               <TableHead>Dampak</TableHead>
+                              <TableHead>Probabilitas</TableHead>
                               <TableHead>Penyakit Terkait</TableHead>
+                              <TableHead>Referensi</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {filteredData.map((mutation) => (
                               <TableRow key={mutation.id}>
                                 <TableCell className="font-mono">{mutation.position}</TableCell>
-                                <TableCell className="font-mono font-bold">{mutation.reference}</TableCell>
+                                <TableCell className="font-mono font-bold">{mutation.pubReference}</TableCell>
                                 <TableCell className="font-mono font-bold text-primary">{mutation.mutation}</TableCell>
                                 <TableCell>{mutation.gene}</TableCell>
                                 <TableCell>
                                   <Badge variant={getImpactColor(mutation.impact) as any}>{mutation.impact}</Badge>
                                 </TableCell>
+                                <TableCell>
+                                  <Badge variant={mutation.riskScore >= 0.7 ? "destructive" : mutation.riskScore >= 0.4 ? "default" : "secondary"}>
+                                    {(mutation.riskScore * 100).toFixed(1)}%
+                                  </Badge>
+                                </TableCell>
                                 <TableCell>{mutation.disease}</TableCell>
+                                <TableCell>
+                                  <a 
+                                    href={`https://pubmed.ncbi.nlm.nih.gov/${mutation.pubReference.replace('PMID:', '')}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-primary hover:underline"
+                                  >
+                                    {mutation.pubReference}
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -477,9 +440,9 @@ export default function ResultsPage() {
                       <div className="mt-8 space-y-6">
                         <div>
                           <h3 className="text-lg font-medium mb-4">Kesimpulan Analisis</h3>
-                          <Alert variant={alertType}>
+                          <Alert variant={alertType} className={bgColor}>
                             <IconComponent className="h-4 w-4" />
-                            <AlertTitle>Tingkat Risiko: {riskLevel.toUpperCase()}</AlertTitle>
+                            <AlertTitle className={titleColor}>Tingkat Risiko: {riskLevel.toUpperCase()}</AlertTitle>
                             <AlertDescription className="mt-2">{conclusion}</AlertDescription>
                           </Alert>
                         </div>
