@@ -23,41 +23,36 @@ export default function ResultsPage() {
   const mutationData = [
     {
       id: 1,
-      position: "chr19:45411941",
-      reference: "C",
-      mutation: "T",
-      gene: "APOE",
+      position: "chr15:42688729",
+      reference: "T",
+      mutation: "C",
+      gene: "TTBK2",
       impact: "Medium",
-      disease: "Alzheimer",
-      frequency: "14%",
-      riskScore: 0.78,
-      pubReference: "PMID:20385794"
+      disease: "Alzheimer Disease",
+      probability: "33.3%"
     },
     {
       id: 2,
-      position: "chr12:40252984",
+      position: "chr15:42738729",
       reference: "G",
       mutation: "A",
-      gene: "LRRK2",
+      gene: "TTBK2",
       impact: "High",
-      disease: "Parkinson",
-      frequency: "0.1%",
-      riskScore: 0.61,
-      pubReference: "PMID:17017515"
+      disease: "Alzheimer Disease",
+      probability: "83.3%"
     },
     {
       id: 3,
-      position: "chr13:99838451",
+      position: "chr15:101591847",
       reference: "A",
       mutation: "G",
-      gene: "SLITRK1",
+      gene: "TM2D3",
       impact: "Low",
-      disease: "Tourette Syndrome",
-      frequency: "2%",
-      riskScore: 0.39,
-      pubReference: "PMID:16288218"
+      disease: "Alzheimer Disease",
+      probability: "16.7%"
     }
-  ];  
+  ];
+  
 
 
   useEffect(() => {
@@ -321,36 +316,24 @@ export default function ResultsPage() {
                               <TableHead>Dampak</TableHead>
                               <TableHead>Probabilitas</TableHead>
                               <TableHead>Penyakit Terkait</TableHead>
-                              <TableHead>Referensi</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {filteredData.map((mutation) => (
                               <TableRow key={mutation.id}>
                                 <TableCell className="font-mono">{mutation.position}</TableCell>
-                                <TableCell className="font-mono font-bold">{mutation.pubReference}</TableCell>
+                                <TableCell className="font-mono font-bold">{mutation.reference}</TableCell>
                                 <TableCell className="font-mono font-bold text-primary">{mutation.mutation}</TableCell>
                                 <TableCell>{mutation.gene}</TableCell>
                                 <TableCell>
                                   <Badge variant={getImpactColor(mutation.impact) as any}>{mutation.impact}</Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant={mutation.riskScore >= 0.7 ? "destructive" : mutation.riskScore >= 0.4 ? "default" : "secondary"}>
-                                    {(mutation.riskScore * 100).toFixed(1)}%
+                                  <Badge variant={parseFloat(mutation.probability) >= 70 ? "destructive" : parseFloat(mutation.probability) >= 40 ? "default" : "secondary"}>
+                                    {mutation.probability}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>{mutation.disease}</TableCell>
-                                <TableCell>
-                                  <a 
-                                    href={`https://pubmed.ncbi.nlm.nih.gov/${mutation.pubReference.replace('PMID:', '')}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 text-primary hover:underline"
-                                  >
-                                    {mutation.pubReference}
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
