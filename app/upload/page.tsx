@@ -333,7 +333,7 @@ export default function UploadPage() {
       <Navbar />
 
       <main className="flex-1 py-12">
-        <div className="container px-4 md:px-6">
+        <div className="container mx-auto px-4 md:px-6">
           {/* Progress Steps */}
           <div className="flex items-center justify-center mb-12">
             <div className="flex items-center space-x-4">

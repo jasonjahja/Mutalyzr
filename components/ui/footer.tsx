@@ -5,7 +5,7 @@ import Link from 'next/link'
 export default function Footer() {
   return (
     <footer className="w-full border-t py-6">
-      <div className="container px-12 flex flex-col items-center justify-between gap-4 md:flex-row">
+      <div className="container mx-auto flex flex-col items-center justify-between gap-4 md:flex-row px-4 md:px-6">
         <p className="text-sm text-muted-foreground">
           © 2025 DNA Mutation Analysis. All rights reserved.
         </p>
