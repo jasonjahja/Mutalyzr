@@ -125,56 +125,58 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-center">
-                    <div className="h-24 w-24 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-                      <Users className="h-12 w-12 text-primary" />
-                    </div>
+              <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 md:grid-cols-3">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/lina.jpg?height=128&width=128"
+                      alt="Lina"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <CardTitle className="text-xl text-center mt-4">Lina Azizah R.H.</CardTitle>
-                  <CardDescription className="text-center">18222107</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-sm text-muted-foreground text-justify">
-                    Mengimplementasikan fungsi untuk mencocokkan hasil perbandingan FASTA dan FASTQ dengan database mutasi (dbSNP) dan wilayah gen penting (BED), sehingga mutasi yang terdeteksi dapat dianalisis berdasarkan relevansi biologisnya.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-center">
-                    <div className="h-24 w-24 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-                      <Users className="h-12 w-12 text-primary" />
-                    </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">Lina Azizah R.H.</h4>
+                    <p className="text-sm text-primary font-medium">18222107</p>
+                    <p className="text-sm text-muted-foreground mt-2 text-justify mx-2">
+                      Mengimplementasikan fungsi untuk mencocokkan hasil perbandingan FASTA dan FASTQ dengan database mutasi (dbSNP) dan wilayah gen penting (BED), sehingga mutasi yang terdeteksi dapat dianalisis berdasarkan relevansi biologisnya.
+                    </p>
                   </div>
-                  <CardTitle className="text-xl text-center mt-4">Jason Jahja</CardTitle>
-                  <CardDescription className="text-center">18222116</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-sm text-muted-foreground text-justify">
-                    Membangun antarmuka web dan mengintegrasikan seluruh fungsi analisis ke dalam platform, memungkinkan pengguna mengunggah data genom, menjalankan analisis, serta melihat hasil dan visualisasi mutasi secara interaktif.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-center">
-                    <div className="h-24 w-24 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-                      <Users className="h-12 w-12 text-primary" />
-                    </div>
+                </div>
+
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/jason.jpg?height=128&width=128"
+                      alt="Jason"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <CardTitle className="text-xl text-center mt-4">Anindita Widya Santoso</CardTitle>
-                  <CardDescription className="text-center">18222128</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-sm text-muted-foreground text-justify">
-                    Merancang algoritma utama untuk membandingkan sekuens referensi FASTA dengan data sampel FASTQ, serta membangun pipeline deteksi mutasi berdasarkan perbedaan sekuens.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">Jason Jahja</h4>
+                    <p className="text-sm text-primary font-medium">18222116</p>
+                    <p className="text-sm text-muted-foreground mt-2 text-justify mx-2">
+                      Membangun antarmuka web dan mengintegrasikan seluruh fungsi analisis ke dalam platform, memungkinkan pengguna mengunggah data genom, menjalankan analisis, serta melihat hasil dan visualisasi mutasi secara interaktif.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/anin.jpg?height=128&width=128"
+                      alt="Anin"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">Anindita Widya Santoso</h4>
+                    <p className="text-sm text-primary font-medium">18222128</p>
+                    <p className="text-sm text-muted-foreground mt-2 text-justify mx-2">
+                      Merancang algoritma utama untuk membandingkan sekuens referensi FASTA dengan data sampel FASTQ, serta membangun pipeline deteksi mutasi berdasarkan perbedaan sekuens.
+                    </p>
+                  </div>
+                </div>
+              </div>
           </div>
         </section>
       </main>

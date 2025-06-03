@@ -343,8 +343,8 @@ export default function InfoPage() {
                           <div className="text-center space-y-4">
                             <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                               <img
-                                src="/placeholder.svg?height=128&width=128"
-                                alt="Dr. Andi Wijaya"
+                                src="/lina.jpg?height=128&width=128"
+                                alt="Lina"
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -360,8 +360,8 @@ export default function InfoPage() {
                           <div className="text-center space-y-4">
                             <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                               <img
-                                src="/placeholder.svg?height=128&width=128"
-                                alt="Dr. Siti Rahayu"
+                                src="/jason.jpg?height=128&width=128"
+                                alt="Jason"
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -377,8 +377,8 @@ export default function InfoPage() {
                           <div className="text-center space-y-4">
                             <div className="mx-auto w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                               <img
-                                src="/placeholder.svg?height=128&width=128"
-                                alt="Budi Santoso"
+                                src="/anin.jpg?height=128&width=128"
+                                alt="Anin"
                                 className="w-full h-full object-cover"
                               />
                             </div>
